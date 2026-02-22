@@ -1,4 +1,6 @@
 {
+  description = "C development with common libs";
+
   inputs.nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
 
   outputs =
@@ -28,24 +30,37 @@
         {
           default = pkgs.mkShell {
             packages = with pkgs; [
-              python314
-              poetry
+              gcc
+              gnumake
+              gdb
+              clang
+              valgrind
             ];
-
-            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
-              pkgs.stdenv.cc.cc
-              pkgs.zlib
-            ];
-
-            shellHook = ''
-              if [ ! -d ".venv" ]; then python3 -m venv .venv; fi
-
-              . .venv/bin/activate
-            '';
           };
         }
       );
 
+      packages = forEachSupportedSystem (
+        { pkgs, system }:
+        {
+          default = pkgs.stdenv.mkDerivation {
+            pname = "prog";
+            version = "0.1.0";
+            src = ./.;
+
+            buildInputs = [
+              #pkgs.zlib
+              #pkgs.openssl
+              #pkgs.libcurl
+            ];
+
+            nativeBuildInputs = [
+              #pkgs.pkg-config
+            ];
+          };
+
+        }
+      );
       formatter = forEachSupportedSystem ({ pkgs, ... }: pkgs.nixfmt);
     };
 }
